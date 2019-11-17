@@ -3,6 +3,7 @@ package telran.forum.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -19,6 +20,11 @@ public class UserAccountController {
 	@PostMapping("/user")
 	public UserProfileDto register(@RequestBody UserRegisterDto userRegisterDto) {
 		return userAccountService.register(userRegisterDto);
+	}
+	
+	@PostMapping("/login")
+	public UserProfileDto login(@RequestHeader("Authorization") String token) {
+		return userAccountService.login(token);
 	}
 
 }
