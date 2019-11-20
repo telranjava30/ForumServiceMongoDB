@@ -1,5 +1,6 @@
 package telran.forum.controller;
 
+import java.security.Principal;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +30,8 @@ public class UserAccountController {
 	}
 	
 	@PostMapping("/login")
-	public UserProfileDto login(@RequestHeader("Authorization") String token) {
+	public UserProfileDto login(@RequestHeader("Authorization") String token, Principal principal) {
+		System.out.println(principal.getName());
 		return userAccountService.login(token);
 	}
 	
