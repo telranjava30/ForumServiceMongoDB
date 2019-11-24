@@ -10,16 +10,16 @@ public interface UserAccountService {
 	
 	UserProfileDto register(UserRegisterDto userRegisterDto);
 	
-	UserProfileDto login(String token);
+	UserProfileDto login(String login);
 	
-	UserProfileDto editUser(String token, UserEditDto userEditDto);
+	UserProfileDto editUser(String login, UserEditDto userEditDto);
 	
-	UserProfileDto removeUser(String token);
+	UserProfileDto removeUser(String login);
 	
-	void changePassword(String token, String password);
+	void changePassword(String login, String password);
 	
-	Set<String> addRole(String login, String role, String token);
+	Set<String> addRole(String login, String role);
 	
-	Set<String> removeRole(String login, String role, String token);
+	Set<String> removeRole(String login, String role);
 
 }

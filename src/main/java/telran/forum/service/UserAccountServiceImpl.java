@@ -12,8 +12,6 @@ import telran.forum.dao.UserAccountRepository;
 import telran.forum.dto.UserEditDto;
 import telran.forum.dto.UserProfileDto;
 import telran.forum.dto.UserRegisterDto;
-import telran.forum.exceptions.ForbiddenException;
-import telran.forum.exceptions.UserAuthenticationException;
 import telran.forum.exceptions.UserExistsException;
 import telran.forum.exceptions.UserNotFoundException;
 import telran.forum.model.UserAccount;
@@ -55,27 +53,14 @@ public class UserAccountServiceImpl implements UserAccountService {
 	}
 
 	@Override
-	public UserProfileDto login(String token) {
-		UserAccountCredentials userAccountCredentials = 
-				accountConfiguration.tokenDecode(token);
-		UserAccount userAccount = 
-				accountRepository.findById(userAccountCredentials.getLogin())
-				.orElseThrow(UserAuthenticationException::new);
-		if (!BCrypt.checkpw(userAccountCredentials.getPassword(), userAccount.getPassword())) {
-			throw new ForbiddenException();
-		}
-		
+	public UserProfileDto login(String login) {
+		UserAccount userAccount = accountRepository.findById(login).get();		
 		return userAccountToUserProfileDto(userAccount);
 	}
 
 	@Override
-	public UserProfileDto editUser(String token, UserEditDto userEditDto) {
-		UserAccountCredentials userCredentials = accountConfiguration.tokenDecode(token);
-		UserAccount userAccount = accountRepository.findById(userCredentials.getLogin())
-				.orElseThrow(UserAuthenticationException::new);
-		if (!BCrypt.checkpw(userCredentials.getPassword(), userAccount.getPassword())) {
-			throw new ForbiddenException();
-		}
+	public UserProfileDto editUser(String login, UserEditDto userEditDto) {
+		UserAccount userAccount = accountRepository.findById(login).get();	
 		if (userEditDto.getFirstName() != null) {
 			userAccount.setFirstName(userEditDto.getFirstName());
 		}
@@ -87,25 +72,15 @@ public class UserAccountServiceImpl implements UserAccountService {
 	}
 
 	@Override
-	public UserProfileDto removeUser(String token) {
-		UserAccountCredentials userCredentials = accountConfiguration.tokenDecode(token);
-		UserAccount userAccount = accountRepository.findById(userCredentials.getLogin())
-				.orElseThrow(UserAuthenticationException::new);
-		if (!BCrypt.checkpw(userCredentials.getPassword(), userAccount.getPassword())) {
-			throw new ForbiddenException();
-		}
-		accountRepository.delete(userAccount);
+	public UserProfileDto removeUser(String login) {
+		UserAccount userAccount = accountRepository.findById(login).get();
+		accountRepository.deleteById(login);
 		return userAccountToUserProfileDto(userAccount);
 	}
 
 	@Override
-	public void changePassword(String token, String password) {
-		UserAccountCredentials userCredentials = accountConfiguration.tokenDecode(token);
-		UserAccount userAccount = accountRepository.findById(userCredentials.getLogin())
-				.orElseThrow(UserAuthenticationException::new);
-		if (!BCrypt.checkpw(userCredentials.getPassword(), userAccount.getPassword())) {
-			throw new ForbiddenException();
-		}
+	public void changePassword(String login, String password) {
+		UserAccount userAccount = accountRepository.findById(login).get();
 		String hashPassword = BCrypt.hashpw(password, BCrypt.gensalt());
 		userAccount.setPassword(hashPassword);
 		userAccount.setExpDate(LocalDateTime.now().plusDays(accountConfiguration.getExpPeriod()));
@@ -114,10 +89,7 @@ public class UserAccountServiceImpl implements UserAccountService {
 	}
 
 	@Override
-	public Set<String> addRole(String login, String role, String token) {
-		if (!isAdmin(token)) {
-			throw new ForbiddenException();
-		}
+	public Set<String> addRole(String login, String role) {
 		UserAccount userAccount = accountRepository.findById(login)
 				.orElseThrow(() -> new UserNotFoundException(login));
 		userAccount.addRole(role);
@@ -126,10 +98,7 @@ public class UserAccountServiceImpl implements UserAccountService {
 	}
 
 	@Override
-	public Set<String> removeRole(String login, String role, String token) {
-		if (!isAdmin(token)) {
-			throw new ForbiddenException();
-		}
+	public Set<String> removeRole(String login, String role) {
 		UserAccount userAccount = accountRepository.findById(login)
 				.orElseThrow(() -> new UserNotFoundException(login));
 		userAccount.removeRole(role);
@@ -137,15 +106,4 @@ public class UserAccountServiceImpl implements UserAccountService {
 		return userAccount.getRoles();
 	}
 	
-	private boolean isAdmin(String token) {
-		UserAccountCredentials userCredentials = accountConfiguration.tokenDecode(token);
-		UserAccount userAccount = accountRepository.findById(userCredentials.getLogin())
-				.orElseThrow(UserAuthenticationException::new);
-		if (!BCrypt.checkpw(userCredentials.getPassword(), userAccount.getPassword())) {
-			throw new ForbiddenException();
-		}
-		return userAccount.getRoles().contains("Administrator");
-	}
-
-
 }
